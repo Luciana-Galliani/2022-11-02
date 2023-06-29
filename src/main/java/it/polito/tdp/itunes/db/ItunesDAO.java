@@ -5,14 +5,18 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
+
 import it.polito.tdp.itunes.model.Album;
 import it.polito.tdp.itunes.model.Artist;
 import it.polito.tdp.itunes.model.Genre;
 import it.polito.tdp.itunes.model.MediaType;
 import it.polito.tdp.itunes.model.Playlist;
 import it.polito.tdp.itunes.model.Track;
+
 
 public class ItunesDAO {
 	
@@ -139,6 +143,81 @@ public class ItunesDAO {
 		return result;
 	}
 
+	//aggiungo
+	public List<String> getGenres(){
+		final String sql = "SELECT DISTINCT genre.Name "
+				+ "	FROM genre "
+				+ "	ORDER BY genre.Name ASC ";
+		List<String> result = new LinkedList<>();
+		
+		try {
+			Connection conn = DBConnect.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			ResultSet res = st.executeQuery();
+
+			while (res.next()) {
+				result.add(res.getString("Name"));
+			}
+			conn.close();
+			return result;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new RuntimeException("SQL Error");
+		}
+	}
 	
+	public List<Track> getTracksConCondizioni(String genere, int min, int max){
+		final String sql = "SELECT t.*, SUM(t.Milliseconds /1000) AS durata "
+				+ "FROM track t, genre g "
+				+ "WHERE t.GenreId = g.GenreId AND g.Name = ? "
+				+ "GROUP BY t.TrackId, t.GenreId "
+				+ "HAVING durata > ? AND durata <= ?";
+		List<Track> result = new ArrayList<Track>();
+		
+		try {
+			Connection conn = DBConnect.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setString(1, genere);
+			st.setInt(2, min);
+			st.setInt(3, max);
+			ResultSet res = st.executeQuery();
+
+			while (res.next()) {
+				Track t = new Track(res.getInt("TrackId"), res.getString("Name"), 
+						res.getString("Composer"), res.getInt("Milliseconds"), 
+						res.getInt("Bytes"),res.getDouble("UnitPrice"));
+				result.add(t);
+				t.setDurata(res.getDouble("durata"));
+			
+			}
+			conn.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new RuntimeException("SQL Error");
+		}
+		return result;
+	}
 	
+	public void countPlaylist(Track t){
+		final String sql = "SELECT COUNT(DISTINCT pt.PlaylistId) AS n "
+				+ "FROM playlisttrack pt "
+				+ "WHERE pt.TrackId = ?";
+		
+		try {
+			Connection conn = DBConnect.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setInt(1, t.getTrackId());
+			ResultSet res = st.executeQuery();
+
+			while (res.next()) {
+				t.setN(res.getInt("n"));
+			
+			}
+			conn.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new RuntimeException("SQL Error");
+		}
+	}
+
 }

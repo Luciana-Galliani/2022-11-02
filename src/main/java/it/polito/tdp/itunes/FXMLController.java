@@ -18,6 +18,7 @@ import javafx.scene.control.TextField;
 public class FXMLController {
 
 	private Model model;
+	private boolean grafoCreato = false;
 	
     @FXML // ResourceBundle that was given to the FXMLLoader
     private ResourceBundle resources;
@@ -32,7 +33,7 @@ public class FXMLController {
     private Button btnPlaylist; // Value injected by FXMLLoader
 
     @FXML // fx:id="cmbGenere"
-    private ComboBox<?> cmbGenere; // Value injected by FXMLLoader
+    private ComboBox<String> cmbGenere; // Value injected by FXMLLoader
 
     @FXML // fx:id="txtDTOT"
     private TextField txtDTOT; // Value injected by FXMLLoader
@@ -48,12 +49,68 @@ public class FXMLController {
 
     @FXML
     void doCalcolaPlaylist(ActionEvent event) {
-
+    	
+    	if(!grafoCreato) {
+    		this.txtResult.setText("Creare prima il grafico");
+    		return;
+    	}
+    	
+    	String d = this.txtDTOT.getText();
+    	if(d == "") {
+    		this.txtResult.setText("Inserire una durata tot");
+    		return;
+    	}
+    	
+    	int dTot =0;
+    	try {
+    		//in minuti
+    		dTot = Integer.parseInt(d);
+    	}catch(NumberFormatException e) {
+    		this.txtResult.setText("Inserire dei parametri numerici");
+    		return;
+    	}
+    	
+    	this.model.getPath(dTot*60); //da min a s
     }
 
     @FXML
     void doCreaGrafo(ActionEvent event) {
+    	this.txtResult.clear();
+    	
+    	String genere = this.cmbGenere.getValue();
+    	
+    	if( genere == null) {
+    		this.txtResult.setText("Scegliere un genere");
+    		return;
+    	}
+    	
+    	String minimo = this.txtMin.getText();
+    	String massimo = this.txtMax.getText();
+    	
+    	if( minimo == "" || massimo == "") {
+    		this.txtResult.setText("Inserire dei parametri");
+    		return;
+    	}
+    	
+    	int min =0;
+    	int max=0;
+    	try {
+    		//sono in secondi
+    		min = Integer.parseInt(minimo);
+    		max = Integer.parseInt(massimo);
+    	}catch(NumberFormatException e) {
+    		this.txtResult.setText("Inserire dei parametri numerici");
+    		return;
+    	}
 
+    	this.model.creaGrafo(genere, min, max);
+    	this.txtResult.appendText("Grafo creato!\n");
+    	this.txtResult.appendText("#Vertici: "+this.model.nVertici()+"\n");
+    	this.txtResult.appendText("#Archi: "+this.model.nArchi()+"\n\n");
+    	
+    	this.grafoCreato=true;
+    	
+    	this.txtResult.appendText(this.model.getConnectedComponents());
     }
 
     @FXML // This method is called by the FXMLLoader when initialization is complete
@@ -70,6 +127,7 @@ public class FXMLController {
     
     public void setModel(Model model) {
     	this.model = model;
+    	this.cmbGenere.getItems().addAll(this.model.generi());
     }
 
 }

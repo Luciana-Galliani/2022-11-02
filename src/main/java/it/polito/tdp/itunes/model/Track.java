@@ -8,6 +8,10 @@ public class Track {
 	private int bytes;
 	private double unitPrice;
 	
+	//aggiungo
+	private double durata;
+	private int nPlaylist;
+	
 	public Track(Integer trackId, String name, String composer, int milliseconds, int bytes, double unitPrice) {
 		super();
 		this.trackId = trackId;
@@ -84,7 +88,25 @@ public class Track {
 	public String toString() {
 		return name;
 	}
-	
+
+	//aggiungo
+	public void setDurata(double double1) {
+		durata = double1;
+		
+	}
+
+	public double getDurata() {
+		return durata;
+	}
+
+	public void setN(int int1) {
+		 nPlaylist = int1;
+		
+	}
+
+	public int getnPlaylist() {
+		return nPlaylist;
+	}
 	
 	
 	
